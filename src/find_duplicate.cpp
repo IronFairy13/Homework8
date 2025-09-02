@@ -1,10 +1,11 @@
 #include "bayan/find_duplicates.hpp"
+#include "bayan/lex_compare.hpp"  // Добавляем этот include
 #include "bayan/hasher.hpp"
-#include "bayan/lex_compare.hpp"
-
-#include <unordered_map>
+#include "bayan/config.hpp"
 #include <algorithm>
 #include <iostream>
+#include <memory>
+#include <vector>
 
 namespace bayan {
 

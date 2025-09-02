@@ -46,13 +46,13 @@ namespace bayan
             crc.process_bytes(buf.data(), block_size_);
             unsigned int v = crc.checksum();
             char hex[9];
-            std::snprintf(hex, sizeof(hex), "%o8x", v);
+            std::snprintf(hex, sizeof(hex), "%08x", v);
             out.s.assign(hex);
         } else {
-            md5d::md5 md;
+            md5m::md5 md;
             md.process_bytes(buf.data(), block_size_);
-            md5d::md5::digest_type d;
-            md.get_digest_type(d);
+            md5m::md5::digest_type d; 
+            md.get_digest(d);
             char hex[33];
             std::snprintf(hex, sizeof(hex), "%08x%08x%08x%08x", d[0], d[1], d[2], d[3]);
             out.s.assign(hex);

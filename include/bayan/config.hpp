@@ -19,7 +19,7 @@ namespace bayan
         std::vector<fs::path> exclude_dirs;
         int level = -1;
         std::uintmax_t min_size = 1;
-        size_t min_size = 4096;
+        size_t block_size = 4096;
         Algo algo = Algo::CRC32;
         std::vector<boost::regex> masks;
         bool trace_io = false;

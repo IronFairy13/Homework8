@@ -6,6 +6,6 @@
 namespace bayan
 {
     std::string glob_to_regex(const std::string &glob);
-    bool name_mathes_any(const std::string &name, const std::vector<boost::regex> &masks);
+    bool name_matches_any(const std::string &name, const std::vector<boost::regex> &masks);
 
 }
