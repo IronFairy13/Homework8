@@ -16,52 +16,64 @@ jobs:
 
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: true
 
       - name: Install system requirements
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake python3-pip python3-venv build-essential
+          sudo apt-get install -y cmake python3-venv python3-pip pipx build-essential
 
-      - name: Install pipx
+      - name: Ensure pipx on PATH
         run: |
-          sudo apt-get install -y pipx
           pipx ensurepath
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Install Conan
+      - name: Install Conan (v2)
         run: pipx install conan
 
       - name: Detect Conan profile
         run: conan profile detect --force
 
-      - name: Conan install
-        run: conan install . --output-folder=build --build=missing
+      - name: Conan install (Release)
+        run: |
+          conan install . \
+            -s build_type=Release \
+            -of build \
+            -b missing
 
-      - name: Configure with CMake
-        run: cmake -B build \
-          -DPROJECT_VERSION_PATCH=${{ github.run_number }} \
-          -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
-          -DCMAKE_BUILD_TYPE=Release
-
+      - name: Configure with CMake (toolchain from Conan)
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCPACK_PACKAGE_VERSION_PATCH=${{ github.run_number }}
 
       - name: Build
-        run: cmake --build build --config Release
+        run: cmake --build build --config Release -- -j
 
-      - name: Package (.deb)
-        run: cmake --build build --target package
+      - name: Package (.deb via CPack)
+        run: cmake --build build --target package --config Release
 
       - name: List build dir
         run: ls -lh build
 
       - name: Find generated .deb
         id: find_deb
+        shell: bash
         run: |
-          DEB_PATH=$(find build -maxdepth 1 -name "homework_7-0.1.*.deb" | head -n1)
+          set -e
+          DEB_PATH=$(find build -maxdepth 1 -type f -name "homework_8-*.deb" | head -n1)
+          if [[ -z "$DEB_PATH" ]]; then
+            echo "No .deb found in build/. Contents:" >&2
+            ls -lah build >&2
+            exit 1
+          fi
           DEB_FILE=$(basename "$DEB_PATH")
-          echo "deb_path=$DEB_PATH" >> $GITHUB_OUTPUT
-          echo "deb_file=$DEB_FILE" >> $GITHUB_OUTPUT
+          echo "deb_path=$DEB_PATH" >> "$GITHUB_OUTPUT"
+          echo "deb_file=$DEB_FILE" >> "$GITHUB_OUTPUT"
+          echo "Found: $DEB_FILE"
 
       - name: Create GitHub Release
         id: create_release
